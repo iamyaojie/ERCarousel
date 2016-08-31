@@ -11,21 +11,21 @@
 
 @interface ERCarousel () <UIScrollViewDelegate>
 
-@property (nonatomic, assign) int           imageCount;         // 图片总数
-@property (nonatomic, assign) int           currentImageIndex;  // 当前显示的图片
+@property (nonatomic, assign)   int             imageCount;             // 图片总数
+@property (nonatomic, assign)   int             currentImageIndex;      // 当前显示的图片
 
-@property (nonatomic, strong) UIView        *Carousel;          //容器
+@property (nonatomic, strong)   UIView          *Carousel;              //容器
 
-@property (nonatomic, weak) UIScrollView    *scrollView;
-@property (nonatomic, weak) UIPageControl   *pageControl;
+@property (nonatomic, weak)     UIScrollView    *scrollView;
+@property (nonatomic, weak)     UIPageControl   *pageControl;
 
-@property (nonatomic, assign) CGRect        bounds;
+@property (nonatomic, assign)   CGRect          bounds;
 
-@property (nonatomic, weak) UIImageView     *leftImage;
-@property (nonatomic, weak) UIImageView     *rightImage;
-@property (nonatomic, weak) UIImageView     *centerImage;
+@property (nonatomic, weak)     UIImageView     *leftImage;
+@property (nonatomic, weak)     UIImageView     *rightImage;
+@property (nonatomic, weak)     UIImageView     *centerImage;
 
-@property (nonatomic, strong) NSTimer       *timer;
+@property (nonatomic, strong)   NSTimer         *timer;
 
 @end
 
@@ -34,161 +34,220 @@
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [ERCarousel new];
- 
+
     self.bounds = CGRectMake(0, 0, frame.size.width, frame.size.height);
-    
+
     self.Carousel = [[UIView alloc] initWithFrame:frame];
 
-    UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:self.Carousel.bounds];
-    self.scrollView = scrollView;
-    
-    self.scrollView.delegate = self;
-    self.scrollView.pagingEnabled = YES;
-    self.scrollView.showsHorizontalScrollIndicator = NO;
-    self.scrollView.showsVerticalScrollIndicator = NO;
-    self.scrollView.bounces = NO;
-    [self.Carousel addSubview:self.scrollView];
-    
-    UIImageView *leftImage = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, frame.size.width, frame.size.height)];
-    self.leftImage = leftImage;
-    self.leftImage.contentMode=UIViewContentModeScaleToFill;
-    self.leftImage.userInteractionEnabled = NO;
-    [self.scrollView addSubview:self.leftImage];
-    
-    UIImageView *centerImage = [[UIImageView alloc] initWithFrame:CGRectMake(frame.size.width, 0, frame.size.width, frame.size.height)];
-    self.centerImage = centerImage;
-    self.centerImage.contentMode=UIViewContentModeScaleToFill;
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchCurrentImage)];
-    self.centerImage.userInteractionEnabled = YES;
-    [self.centerImage addGestureRecognizer:tap];
-    [self.scrollView addSubview:self.centerImage];
-    
-    UIImageView *rightImage = [[UIImageView alloc] initWithFrame:CGRectMake(2 * frame.size.width, 0, frame.size.width, frame.size.height)];
-    self.rightImage = rightImage;
-    self.rightImage.contentMode=UIViewContentModeScaleToFill;
-    self.rightImage.userInteractionEnabled = NO;
-    [self.scrollView addSubview:self.rightImage];
+    self.scrollView.backgroundColor = [UIColor whiteColor];
+    self.leftImage.backgroundColor = [UIColor whiteColor];
+    self.centerImage.backgroundColor = [UIColor whiteColor];
+    self.rightImage.backgroundColor = [UIColor whiteColor];
+
+    self.currentImageIndex = 0;
+    self.pageControl.currentPage = self.currentImageIndex;
     
     return self;
 }
 
 - (void)setImageDataArray:(NSArray *)imageDataArray
 {
-    
     _imageDataArray = imageDataArray;
+
     self.imageCount = (int)imageDataArray.count;
+
+    [self setImage:self.leftImage withURLString:[NSString stringWithFormat:@"%@",_imageDataArray[self.imageCount - 1]]];
+    [self setImage:self.centerImage withURLString:[NSString stringWithFormat:@"%@",_imageDataArray[0]]];
     
-    CGRect frame = self.scrollView.frame;
-    
-    [self.scrollView setContentOffset:CGPointMake(self.scrollView.frame.size.width, 0) animated:NO];
-    self.scrollView.contentSize = CGSizeMake(frame.size.width * 3, frame.size.height);
-    
-    UIPageControl *pageControl = [[UIPageControl alloc] init];
-    self.pageControl = pageControl;
-    CGSize size = [self.pageControl sizeForNumberOfPages:self.imageCount];
-    self.pageControl.bounds = CGRectMake(0, 0, size.width, size.height);
-    self.pageControl.center = CGPointMake(frame.size.width / 2, frame.size.height * 4 / 5);
-    
-    self.pageControl.pageIndicatorTintColor = [UIColor blackColor];
-    self.pageControl.currentPageIndicatorTintColor = [UIColor whiteColor];
-    
+    if (self.imageCount == 1)
+    {
+        [self setImage:self.rightImage withURLString:[NSString stringWithFormat:@"%@",_imageDataArray[0]]];
+    }else
+    {
+        [self setImage:self.rightImage withURLString:[NSString stringWithFormat:@"%@",_imageDataArray[1]]];
+    }
+
     self.pageControl.numberOfPages = self.imageCount;
-    [self.Carousel addSubview:self.pageControl];
-    
-    [self.leftImage sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",self.imageDataArray[self.imageCount - 1]]] placeholderImage:nil];
-    
-    [self.centerImage sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",self.imageDataArray[0]]] placeholderImage:nil];
-    
-    [self.rightImage sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",self.imageDataArray[1]]] placeholderImage:nil];
-    
-    self.rightImage.contentMode=UIViewContentModeScaleToFill;
-    self.centerImage.contentMode=UIViewContentModeScaleToFill;
-    self.leftImage.contentMode=UIViewContentModeScaleToFill;
-    
-    self.currentImageIndex = 0;
-    
-    self.pageControl.currentPage = self.currentImageIndex;
-    
 }
 
 - (void)addSuperView:(UIView *)view
 {
     [view addSubview:self.Carousel];
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(nextPic) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-    
+    [self startTimer];
+}
+
+- (void)setPageControlCurrentIndicatorColor:(UIColor *)currentIndicatorColor withIndicatorColor:(UIColor *)indicatorColor
+{
+    self.pageControl.currentPageIndicatorTintColor = currentIndicatorColor;
+    self.pageControl.pageIndicatorTintColor = indicatorColor;
+}
+
+- (void)setPageControlCenterPoint:(CGPoint)centerPoint
+{
+    self.pageControl.center = centerPoint;
+}
+
+- (void)setSpacingTime:(double)spacingTime
+{
+    _spacingTime = spacingTime;
+    [self startTimer];
 }
 
 #pragma mark - 交互事件
-- (void)touchCurrentImage {
+- (void)touchCurrentImage
+{
     [self.delegate touchClickImageIndex:self.currentImageIndex];
 }
 
 #pragma mark - UIScrollViewDelegate
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
-    
     [self refreshImage];
-    
-    [self.scrollView setContentOffset:CGPointMake(self.scrollView.frame.size.width, 0) animated:NO];
-    
-    self.pageControl.currentPage=self.currentImageIndex;
-    
 }
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
-    [self.timer invalidate];
+    [self stopTimer];
 }
 
 - (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
 {
-
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:3.0 target:self selector:@selector(nextPic) userInfo:nil repeats:YES];
-    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
-    
+    [self performSelector:@selector(startTimer) withObject:nil afterDelay:0.5];
 }
 
 #pragma mark - 私有方法
+- (void)setImage:(UIImageView *)imageView withURLString:(NSString *)urlString
+{
+    [imageView sd_setImageWithURL:[NSURL URLWithString:urlString] placeholderImage:nil];
+}
+
 - (void)refreshImage
 {
-    
     CGPoint offset=[self.scrollView contentOffset];
-    if (offset.x>self.scrollView.frame.size.width) {
+    
+    if (offset.x > self.bounds.size.width)
+    {
+        self.currentImageIndex = (self.currentImageIndex + 1) % self.imageCount;
         
-        self.currentImageIndex=(self.currentImageIndex+1) %self.imageCount;
-    }else if(offset.x<self.scrollView.frame.size.width){
-        
-        self.currentImageIndex=(self.currentImageIndex+self.imageCount-1)%self.imageCount;
+    }else if(offset.x < self.bounds.size.width)
+    {
+        self.currentImageIndex = (self.currentImageIndex + self.imageCount - 1) % self.imageCount;
     }
     
-    [self.centerImage sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",self.imageDataArray[self.currentImageIndex]]] placeholderImage:nil];
+    int leftImageIndex = (self.currentImageIndex + self.imageCount - 1) % self.imageCount;
+    int rightImageIndex = (self.currentImageIndex + 1) % self.imageCount;
+
+    [self setImage:self.centerImage withURLString:[NSString stringWithFormat:@"%@",self.imageDataArray[self.currentImageIndex]]];
+    [self setImage:self.leftImage withURLString:[NSString stringWithFormat:@"%@",self.imageDataArray[leftImageIndex]]];
+    [self setImage:self.rightImage withURLString:[NSString stringWithFormat:@"%@",self.imageDataArray[rightImageIndex]]];
     
-    int leftImageIndex=(self.currentImageIndex+self.imageCount-1)%self.imageCount;
-    int rightImageIndex=(self.currentImageIndex+1)%self.imageCount;
-    
-    [self.leftImage sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",self.imageDataArray[leftImageIndex]]] placeholderImage:nil];
-    
-    [self.rightImage sd_setImageWithURL:[NSURL URLWithString:[NSString stringWithFormat:@"%@",self.imageDataArray[rightImageIndex]]] placeholderImage:nil];
+    [self.scrollView setContentOffset:CGPointMake(self.bounds.size.width, 0)];
+    self.pageControl.currentPage=self.currentImageIndex;
     
 }
 
 - (void)nextPic
 {
-    
-    [UIView animateWithDuration:0.5 animations:^{
-        
+    [UIView animateWithDuration:0.5 animations:^
+    {
         [self.scrollView setContentOffset:CGPointMake(self.bounds.size.width * 2, 0)];
         
-    } completion:^(BOOL finished) {
-        
+    } completion:^(BOOL finished)
+    {
         [self refreshImage];
-
-        [self.scrollView setContentOffset:CGPointMake(self.bounds.size.width, 0)];
-        
-        self.pageControl.currentPage=self.currentImageIndex;
     }];
 }
 
+- (void)startTimer
+{
+    [self stopTimer];
+    
+    if (!self.spacingTime)
+    {
+        self.spacingTime = 3;
+    }
+    
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.spacingTime target:self selector:@selector(nextPic) userInfo:nil repeats:YES];
+    [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
+}
+
+- (void)stopTimer
+{
+    [self.timer invalidate];
+}
+
+#pragma mark - 懒加载
+- (UIScrollView *)scrollView
+{
+    if (_scrollView == nil)
+    {
+        UIScrollView *scrollView = [[UIScrollView alloc] initWithFrame:self.bounds];
+        _scrollView = scrollView;
+        [_scrollView setContentOffset:CGPointMake(self.bounds.size.width, 0) animated:NO];
+        _scrollView.contentSize = CGSizeMake(self.bounds.size.width * 3, self.bounds.size.height);
+        _scrollView.delegate = self;
+        _scrollView.pagingEnabled = YES;
+        _scrollView.showsHorizontalScrollIndicator = NO;
+        _scrollView.showsVerticalScrollIndicator = NO;
+        _scrollView.bounces = NO;
+        [self.Carousel addSubview:_scrollView];
+    }
+    return _scrollView;
+}
+
+- (UIImageView *)leftImage
+{
+    if (_leftImage == nil)
+    {
+        UIImageView *leftImage = [[UIImageView alloc] initWithFrame:self.bounds];
+        _leftImage = leftImage;
+        _leftImage.contentMode=UIViewContentModeScaleToFill;
+        _leftImage.userInteractionEnabled = NO;
+        [self.scrollView addSubview:_leftImage];
+    }
+    return _leftImage;
+}
+
+- (UIImageView *)centerImage
+{
+    if (_centerImage == nil)
+    {
+        UIImageView *centerImage = [[UIImageView alloc] initWithFrame:CGRectMake(self.bounds.size.width, 0, self.bounds.size.width, self.bounds.size.height)];
+        _centerImage = centerImage;
+        _centerImage.contentMode=UIViewContentModeScaleToFill;
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchCurrentImage)];
+        _centerImage.userInteractionEnabled = YES;
+        [_centerImage addGestureRecognizer:tap];
+        [self.scrollView addSubview:_centerImage];
+    }
+    return _centerImage;
+}
+
+- (UIImageView *)rightImage
+{
+    if (_rightImage == nil)
+    {
+        UIImageView *rightImage = [[UIImageView alloc] initWithFrame:CGRectMake(2 * self.bounds.size.width, 0, self.bounds.size.width, self.bounds.size.height)];
+        _rightImage = rightImage;
+        _rightImage.contentMode=UIViewContentModeScaleToFill;
+        _rightImage.userInteractionEnabled = NO;
+        [self.scrollView addSubview:_rightImage];
+    }
+    return _rightImage;
+}
+
+- (UIPageControl *)pageControl
+{
+    if (_pageControl == nil)
+    {
+        UIPageControl *pageControl = [[UIPageControl alloc] init];
+        _pageControl = pageControl;
+        _pageControl.center = CGPointMake(self.bounds.size.width / 2, self.bounds.size.height * 9 / 10);
+        _pageControl.pageIndicatorTintColor = [UIColor blackColor];
+        _pageControl.currentPageIndicatorTintColor = [UIColor whiteColor];
+        [self.Carousel addSubview:_pageControl];
+    }
+    return _pageControl;
+}
 
 @end
