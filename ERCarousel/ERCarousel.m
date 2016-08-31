@@ -162,12 +162,12 @@
 {
     [self stopTimer];
     
-    if (!self.spacingTime)
+    if (!_spacingTime)
     {
-        self.spacingTime = 3;
+        _spacingTime = 3;
     }
     
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.spacingTime target:self selector:@selector(nextPic) userInfo:nil repeats:YES];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:_spacingTime target:self selector:@selector(nextPic) userInfo:nil repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:self.timer forMode:NSRunLoopCommonModes];
 }
 
@@ -216,11 +216,31 @@
         _centerImage = centerImage;
         _centerImage.contentMode=UIViewContentModeScaleToFill;
         UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(touchCurrentImage)];
-        _centerImage.userInteractionEnabled = YES;
         [_centerImage addGestureRecognizer:tap];
+        
+        UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPress:)];
+        [_centerImage addGestureRecognizer:longPress];
+
+        _centerImage.userInteractionEnabled = YES;
         [self.scrollView addSubview:_centerImage];
     }
     return _centerImage;
+}
+
+- (void)longPress:(UILongPressGestureRecognizer *)longPressSender
+{
+    switch (longPressSender.state) {
+        case UIGestureRecognizerStateBegan:
+            [self stopTimer];
+            break;
+        case 2:
+            break;
+        case UIGestureRecognizerStateEnded:
+            [self startTimer];
+            break;
+        default:
+            break;
+    }
 }
 
 - (UIImageView *)rightImage

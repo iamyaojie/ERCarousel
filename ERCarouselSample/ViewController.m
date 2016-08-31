@@ -34,11 +34,15 @@
     [self.carousel setPageControlCenterPoint:CGPointMake(50, 50)];
     
     
-    [self.carousel setImageDataArray:array];
-    self.carousel.spacingTime = 1;
+//    [self.carousel setImageDataArray:array];
+    self.carousel.spacingTime = 4;
     
     self.carousel.delegate = self;
     [self.carousel addSuperView:self.view];
+    
+    
+    [self.carousel setImageDataArray:array];
+    [self.carousel setImageDataArray:array];
     
 }
 
@@ -48,7 +52,7 @@
 }
 
 - (void)touchClickImageIndex:(NSInteger)index {
-    NSLog(@"%d",index);
+    NSLog(@"%ld",(long)index);
 }
 
 @end
